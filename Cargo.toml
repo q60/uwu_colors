@@ -1,0 +1,9 @@
+[package]
+name = "uwu_colors"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+regex = "1.11.1"
+tokio = { version = "1.44.1", features = ["full"] }
+tower-lsp = "0.20.0"
