@@ -1,9 +1,17 @@
 [package]
 name = "uwu_colors"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [dependencies]
-regex = "1.11.1"
+dashmap = "6.1.0"
+fancy-regex = "0.14.0"
 tokio = { version = "1.44.1", features = ["full"] }
 tower-lsp = "0.20.0"

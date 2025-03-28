@@ -6,6 +6,16 @@
     utils.url = "github:numtide/flake-utils";
   };
 
+  nixConfig = {
+    extra-substituters = [
+      "https://kira.cachix.org/"
+    ];
+
+    extra-trusted-public-keys = [
+      "kira.cachix.org-1:THBrq/BplPxOJnWnxCBMOeP03ReON+FUYZpiDTnZqwA="
+    ];
+  };
+
   outputs = {
     self,
     nixpkgs,
