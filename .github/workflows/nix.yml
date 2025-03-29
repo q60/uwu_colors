@@ -10,6 +10,9 @@ jobs:
       uses: cachix/install-nix-action@v25
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+    - name: test
+      run: |
+        nix run nixpkgs#cargo test
     - name: install cachix
       run: |
         nix profile install nixpkgs#cachix
