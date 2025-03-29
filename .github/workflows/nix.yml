@@ -12,7 +12,7 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: test
       run: |
-        nix cargo test
+        cargo test
     - name: install cachix
       run: |
         nix profile install nixpkgs#cachix
