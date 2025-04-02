@@ -69,7 +69,7 @@ fn parse_color(hex_str: &str) -> Option<Color> {
     match str_length {
         3 | 4 => {
             let (r, g, b, a) = if str_length == 3 {
-                ((hex & 0xF00) >> 8, (hex & 0x0F0) >> 4, hex & 0x00F, 15u8)
+                ((hex & 0xF00) >> 8, (hex & 0x0F0) >> 4, hex & 0x00F, 0xF)
             } else {
                 (
                     (hex & 0xF000) >> 12,
@@ -87,14 +87,14 @@ fn parse_color(hex_str: &str) -> Option<Color> {
                 red: f32::from(r as u8) / 15f32,
                 green: f32::from(g as u8) / 15f32,
                 blue: f32::from(b as u8) / 15f32,
-                alpha: f32::from(a as u8) / 15f32,
+                alpha: f32::from(a) / 15f32,
             })
         }
         6 | 8 => {
             let (r, g, b, a) = if str_length == 6 {
                 let [_, r, g, b] = hex.to_be_bytes();
 
-                (r, g, b, 0xFFu8)
+                (r, g, b, 0xFF)
             } else {
                 // [r, g, b, a]
                 hex.to_be_bytes().into()
