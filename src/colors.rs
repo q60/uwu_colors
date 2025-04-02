@@ -55,7 +55,7 @@ pub fn colors_in_line_iter(
 ///
 /// # Exceptions
 ///
-/// Returns a [`None`] when the input string length is not in [3, 6, 8].
+/// Returns a [`None`] when the input string length is not in [3, 4, 6, 8].
 ///
 /// # Panics
 ///
@@ -67,8 +67,17 @@ fn parse_color(hex_str: &str) -> Option<Color> {
     let hex = u32::from_str_radix(hex_str, 16).unwrap();
 
     match str_length {
-        3 => {
-            let (r, g, b) = ((hex & 0xF00) >> 8, (hex & 0x0F0) >> 4, hex & 0x00F);
+        3 | 4 => {
+            let (r, g, b, a) = if str_length == 3 {
+                ((hex & 0xF00) >> 8, (hex & 0x0F0) >> 4, hex & 0x00F, 15u8)
+            } else {
+                (
+                    (hex & 0xF000) >> 12,
+                    (hex & 0x0F00) >> 8,
+                    (hex & 0x00F0) >> 4,
+                    (hex & 0x000F) as u8,
+                )
+            };
 
             #[expect(
                 clippy::cast_possible_truncation,
@@ -78,7 +87,7 @@ fn parse_color(hex_str: &str) -> Option<Color> {
                 red: f32::from(r as u8) / 15f32,
                 green: f32::from(g as u8) / 15f32,
                 blue: f32::from(b as u8) / 15f32,
-                alpha: 1f32,
+                alpha: f32::from(a as u8) / 15f32,
             })
         }
         6 | 8 => {
@@ -110,6 +119,7 @@ mod parse_color {
     fn success() {
         let cases = [
             ("369", (0.2, 0.4, 0.6, 1.0)),
+            ("369C", (0.2, 0.4, 0.6, 0.8)),
             ("336699", (0.2, 0.4, 0.6, 1.0)),
             ("336699CC", (0.2, 0.4, 0.6, 0.8)),
             ("1A4D80B3", (0.101960786, 0.3019608, 0.5019608, 0.7019608)),
@@ -154,16 +164,18 @@ mod parse_color {
 mod colors_in_line_iter {
     use super::*;
 
-    const REGEX: &str = r#"(["'])\#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\1"#;
+    const REGEX: &str =
+        r#"(["'])\#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\1"#;
 
     #[test]
     fn success() {
-        let text = "color1 = \"#9AB8DE\" # some comment\ncolor2 = '#369'\ncolor3 = \"#336699CC\"";
+        let text = "color1 = \"#9AB8DE\" # some comment\ncolor2 = '#369'\ncolor3 = \"#336699CC\"\ncolor4 = \"#693C\"";
 
         let colors = [
             color_information((0, 9), (0, 18), (0.6039216, 0.72156864, 0.87058824, 1.0)),
             color_information((1, 9), (1, 15), (0.2, 0.4, 0.6, 1.0)),
             color_information((2, 9), (2, 20), (0.2, 0.4, 0.6, 0.8)),
+            color_information((3, 9), (3, 16), (0.4, 0.6, 0.2, 0.8)),
         ];
 
         assert_eq!(colors, &find_colors(text)[..]);
@@ -171,7 +183,7 @@ mod colors_in_line_iter {
 
     #[test]
     fn no_colors() {
-        let text = "some random text talking about colors like #ABCDEF, #FFF,\n#E03C31,\n#007AA5\nalso wrong strings like \"#FF0000'";
+        let text = "some random text talking about colors like #ABCDEF, #FFF,\n#E03C31,\n#007AA5\n#0A45\nalso wrong strings like \"#FF0000'";
 
         let colors: [ColorInformation; 0] = [];
 

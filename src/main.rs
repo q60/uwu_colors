@@ -5,7 +5,8 @@ use fancy_regex::Regex;
 use tower_lsp::LspService;
 use tower_lsp::Server;
 
-const COLOR_REGEX: &str = r#"(["'])\#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\1"#;
+const COLOR_REGEX: &str =
+    r#"(["'])\#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\1"#;
 
 #[tokio::main]
 async fn main() {
