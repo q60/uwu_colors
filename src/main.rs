@@ -1,4 +1,5 @@
 use uwu_colors::Backend;
+use uwu_colors::cli::Config;
 use uwu_colors::colors;
 
 use dashmap::DashMap;
@@ -11,12 +12,20 @@ const COLOR_REGEX: &str =
 
 #[tokio::main]
 async fn main() {
+    let config = Config::new();
+
+    if config.version {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+
+        return;
+    }
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
     let documents = DashMap::new();
     let color_regex = Regex::new(COLOR_REGEX).unwrap();
-    let completions = colors::named_colors_completions(true);
+    let completions = colors::named_colors_completions(&config.completions_mode);
 
     let (service, socket) = LspService::new(|client| Backend {
         client,

@@ -160,28 +160,54 @@ const NAMED_COLORS: &[(&str, &str)] = &[
     ("yellowgreen", "9acd32"),
 ];
 
+pub enum CompletionsMode {
+    Full,
+    None,
+    Uppercase,
+    Lowercase,
+}
+
 /// Completion builder function.
 ///
-/// Builds a [`CompletionResponse`] of a [`Vec`] of CSS named colors. With `include_uppercase: true` it also builds completions for uppercase colors - uppercase color name yields an uppercase hex color.
-pub fn named_colors_completions(include_uppercase: bool) -> CompletionResponse {
+/// Builds a [`CompletionResponse`] of a [`Vec`] of CSS named colors.
+pub fn named_colors_completions(mode: &CompletionsMode) -> Option<CompletionResponse> {
+    if matches!(mode, CompletionsMode::None) {
+        return None;
+    }
+
     let completions: Vec<CompletionItem> =
         NAMED_COLORS
             .iter()
-            .fold(Vec::new(), |mut acc, (name, hex)| {
-                let lowercase_colors = ((*name).to_string(), (*hex).to_string());
+            .fold(Vec::new(), |mut acc, (name, hex)| match mode {
+                CompletionsMode::Full => {
+                    let lowercase_colors = ((*name).to_string(), (*hex).to_string());
 
-                acc.push(completion_item(lowercase_colors.0, lowercase_colors.1));
+                    acc.push(completion_item(lowercase_colors.0, lowercase_colors.1));
 
-                if include_uppercase {
-                    let uppercase_colors = (name.to_uppercase(), (*hex).to_string().to_uppercase());
+                    let uppercase_colors = (name.to_uppercase(), hex.to_uppercase());
 
                     acc.push(completion_item(uppercase_colors.0, uppercase_colors.1));
-                }
 
-                acc
+                    acc
+                }
+                CompletionsMode::Uppercase => {
+                    let uppercase_colors = ((*name).to_string(), hex.to_uppercase());
+
+                    acc.push(completion_item(uppercase_colors.0, uppercase_colors.1));
+
+                    acc
+                }
+                CompletionsMode::Lowercase => {
+                    let lowercase_colors = ((*name).to_string(), (*hex).to_string());
+
+                    acc.push(completion_item(lowercase_colors.0, lowercase_colors.1));
+
+                    acc
+                }
+                CompletionsMode::None => acc,
             });
 
-    CompletionResponse::Array(completions)
+    Some(CompletionResponse::Array(completions))
 }
 
 /// [`CompletionItem`] helper function.
@@ -190,7 +216,11 @@ pub fn named_colors_completions(include_uppercase: bool) -> CompletionResponse {
 fn completion_item(color_name: String, color_hex: String) -> CompletionItem {
     CompletionItem {
         kind: Some(CompletionItemKind::COLOR),
-        detail: Some(format!("{color_hex} ({color_name}) color")),
+        detail: Some(format!(
+            "\"#{}\" ({}) color",
+            color_hex,
+            color_name.to_lowercase()
+        )),
         sort_text: Some(color_name.to_lowercase()),
         insert_text: Some(color_hex),
         label: color_name,
@@ -210,7 +240,7 @@ pub fn colors_in_line_iter(
         .captures_iter(line)
         .filter(Result::is_ok)
         .map(move |captures| {
-            let captures = captures.unwrap();
+            let captures = captures.expect("perfectly valid regex");
             // the first capture is a full matching string
             // the second capture holds quotation marks
             // the third one holds hex value
