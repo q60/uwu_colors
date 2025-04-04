@@ -1,5 +1,6 @@
 #![doc = include_str!("../readme.md")]
 
+pub mod cli;
 pub mod colors;
 
 use dashmap::DashMap;
@@ -25,7 +26,7 @@ pub struct Backend {
     pub color_regex: Regex,
 
     /// CSS named colors completions
-    pub completions: CompletionResponse,
+    pub completions: Option<CompletionResponse>,
 }
 
 #[tower_lsp::async_trait]
@@ -78,36 +79,38 @@ impl LanguageServer for Backend {
 
     /// Named colors completions handler.
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
-        let Position {
-            line: line_pos,
-            character: char_pos,
-        } = params.text_document_position.position;
+        if let Some(completions) = &self.completions {
+            let Position {
+                line: line_pos,
+                character: char_pos,
+            } = params.text_document_position.position;
 
-        // early return on lines starting with `#`
-        if char_pos <= 1 {
-            return Ok(None);
-        }
+            // early return on lines starting with `#`
+            if char_pos <= 1 {
+                return Ok(None);
+            }
 
-        let Some(context) = params.context else {
-            return Ok(None);
-        };
-
-        if Some("#".to_string()) == context.trigger_character {
-            let indented_hash_regex = Regex::new(r"^\s+#").expect("perfectly valid regex");
-
-            let uri = params.text_document_position.text_document.uri;
-
-            let Some(document) = &self.documents.get(&uri) else {
+            let Some(context) = params.context else {
                 return Ok(None);
             };
 
-            let line = document.lines().collect::<Vec<&str>>()[line_pos as usize];
+            if Some("#".to_string()) == context.trigger_character {
+                let indented_hash_regex = Regex::new(r"^\s+#").expect("perfectly valid regex");
 
-            if !indented_hash_regex
-                .is_match(line)
-                .expect("perfectly valid regex")
-            {
-                return Ok(Some(self.completions.clone()));
+                let uri = params.text_document_position.text_document.uri;
+
+                let Some(document) = &self.documents.get(&uri) else {
+                    return Ok(None);
+                };
+
+                let line = document.lines().collect::<Vec<&str>>()[line_pos as usize];
+
+                if !indented_hash_regex
+                    .is_match(line)
+                    .expect("perfectly valid regex")
+                {
+                    return Ok(Some(completions.clone()));
+                }
             }
         }
 
