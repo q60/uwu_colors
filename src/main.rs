@@ -1,4 +1,5 @@
 use uwu_colors::Backend;
+use uwu_colors::colors;
 
 use dashmap::DashMap;
 use fancy_regex::Regex;
@@ -15,11 +16,13 @@ async fn main() {
 
     let documents = DashMap::new();
     let color_regex = Regex::new(COLOR_REGEX).unwrap();
+    let completions = colors::named_colors_completions(true);
 
     let (service, socket) = LspService::new(|client| Backend {
         client,
         documents,
         color_regex,
+        completions,
     });
 
     Server::new(stdin, stdout, socket).serve(service).await;
