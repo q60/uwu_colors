@@ -2,7 +2,7 @@
 
 mod named_colors;
 
-use named_colors::CSS as CSS_COLORS;
+pub use named_colors::NamedColors;
 
 use crate::Color;
 use crate::ColorInformation;
@@ -31,13 +31,18 @@ pub enum CompletionsMode {
 /// Completion builder function.
 ///
 /// Builds a [`CompletionResponse`] of a [`Vec`] of CSS named colors.
-pub fn named_colors_completions(mode: &CompletionsMode) -> Option<CompletionResponse> {
+pub fn named_colors_completions(
+    mode: &CompletionsMode,
+    colors: &NamedColors,
+) -> Option<CompletionResponse> {
     if matches!(mode, CompletionsMode::None) {
         return None;
     }
 
+    let colors = colors.get();
+
     let completions: Vec<CompletionItem> =
-        CSS_COLORS
+        colors
             .iter()
             .fold(Vec::new(), |mut acc, (name, hex)| match mode {
                 CompletionsMode::Full => {
