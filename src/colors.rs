@@ -334,13 +334,16 @@ mod color_completions {
 
     #[test]
     fn named_color_completions_noop() {
-        assert_eq!(None, named_colors_completions(&CompletionsMode::None));
+        assert_eq!(
+            None,
+            named_colors_completions(&CompletionsMode::None, &NamedColors::ColorHexa)
+        );
     }
 
     #[test]
     fn named_color_completions_uppercase() {
         if let Some(CompletionResponse::Array(completion_items_vec)) =
-            named_colors_completions(&CompletionsMode::Uppercase)
+            named_colors_completions(&CompletionsMode::Uppercase, &NamedColors::ColorHexa)
         {
             assert_eq!(false, completion_items_vec.is_empty());
         }
@@ -349,7 +352,7 @@ mod color_completions {
     #[test]
     fn named_color_completions_lowercase() {
         if let Some(CompletionResponse::Array(completion_items_vec)) =
-            named_colors_completions(&CompletionsMode::Lowercase)
+            named_colors_completions(&CompletionsMode::Lowercase, &NamedColors::ColorHexa)
         {
             assert_eq!(false, completion_items_vec.is_empty());
         }
@@ -358,7 +361,13 @@ mod color_completions {
     #[test]
     fn named_color_completions_full() {
         if let Some(CompletionResponse::Array(completion_items_vec)) =
-            named_colors_completions(&CompletionsMode::Full)
+            named_colors_completions(&CompletionsMode::Full, &NamedColors::ColorHexa)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Full, &NamedColors::Css)
         {
             assert_eq!(false, completion_items_vec.is_empty());
         }

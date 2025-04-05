@@ -916,7 +916,7 @@ pub enum NamedColors {
 
 impl NamedColors {
     /// Returns a reference to one of color slices according to [`NamedColors`].
-    pub fn get(&self) -> ColorCollection {
+    pub const fn get(&self) -> ColorCollection {
         match self {
             Self::Css => CSS,
             Self::ColorHexa => COLOR_HEXA,
