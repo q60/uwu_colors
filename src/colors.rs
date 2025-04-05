@@ -184,9 +184,11 @@ pub fn named_colors_completions(mode: &CompletionsMode) -> Option<CompletionResp
 
                     acc.push(completion_item(lowercase_colors.0, lowercase_colors.1));
 
-                    let uppercase_colors = (name.to_uppercase(), hex.to_uppercase());
+                    if hex.matches(char::is_alphabetic).count() > 0 {
+                        let uppercase_colors = (name.to_uppercase(), hex.to_uppercase());
 
-                    acc.push(completion_item(uppercase_colors.0, uppercase_colors.1));
+                        acc.push(completion_item(uppercase_colors.0, uppercase_colors.1));
+                    }
 
                     acc
                 }
