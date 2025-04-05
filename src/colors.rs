@@ -322,3 +322,40 @@ mod colors_in_line_iter {
             .collect()
     }
 }
+
+#[cfg(test)]
+mod color_completions {
+    use super::*;
+
+    #[test]
+    fn named_color_completions_noop() {
+        assert_eq!(None, named_colors_completions(&CompletionsMode::None));
+    }
+
+    #[test]
+    fn named_color_completions_uppercase() {
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Uppercase)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+    }
+
+    #[test]
+    fn named_color_completions_lowercase() {
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Lowercase)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+    }
+
+    #[test]
+    fn named_color_completions_full() {
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Full)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+    }
+}
