@@ -1,5 +1,7 @@
+mod cli;
+
+use cli::Config;
 use uwu_colors::Backend;
-use uwu_colors::cli::Config;
 use uwu_colors::colors;
 
 use dashmap::DashMap;

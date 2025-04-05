@@ -1,3 +1,5 @@
+//! This module is responsible for command line arguments deserialization and [`Config`] building.
+
 use crate::colors::CompletionsMode;
 use argh::FromArgs;
 

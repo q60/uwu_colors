@@ -1,6 +1,5 @@
 #![doc = include_str!("../readme.md")]
 
-pub mod cli;
 pub mod colors;
 
 use dashmap::DashMap;
