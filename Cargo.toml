@@ -1,6 +1,6 @@
 [package]
 name = "uwu_colors"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2024"
 
 [profile.release]
@@ -11,6 +11,7 @@ panic = "abort"
 strip = true
 
 [dependencies]
+argh = "0.1.13"
 dashmap = "6.1.0"
 fancy-regex = "0.14.0"
 tokio = { version = "1.44.1", features = ["full"] }

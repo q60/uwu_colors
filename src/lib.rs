@@ -1,6 +1,6 @@
 #![doc = include_str!("../readme.md")]
 
-mod colors;
+pub mod colors;
 
 use dashmap::DashMap;
 use fancy_regex::Regex;
@@ -23,6 +23,9 @@ pub struct Backend {
 
     /// Regex to find colors in files.
     pub color_regex: Regex,
+
+    /// CSS named colors completions
+    pub completions: Option<CompletionResponse>,
 }
 
 #[tower_lsp::async_trait]
@@ -33,6 +36,10 @@ impl LanguageServer for Backend {
             capabilities: ServerCapabilities {
                 text_document_sync: Some(TextDocumentSyncKind::FULL.into()),
                 color_provider: Some(ColorProviderCapability::Simple(true)),
+                completion_provider: Some(CompletionOptions {
+                    trigger_characters: Some(vec!["#".to_string()]),
+                    ..CompletionOptions::default()
+                }),
                 ..Default::default()
             },
             ..Default::default()
@@ -67,6 +74,46 @@ impl LanguageServer for Backend {
         if let Some(mut text) = docs.get_mut(&uri) {
             text.clone_from(&params.content_changes[0].text);
         }
+    }
+
+    /// Named colors completions handler.
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        if let Some(completions) = &self.completions {
+            let Position {
+                line: line_pos,
+                character: char_pos,
+            } = params.text_document_position.position;
+
+            // early return on lines starting with `#`
+            if char_pos <= 1 {
+                return Ok(None);
+            }
+
+            let Some(context) = params.context else {
+                return Ok(None);
+            };
+
+            if Some("#".to_string()) == context.trigger_character {
+                let indented_hash_regex = Regex::new(r"^\s+#").expect("perfectly valid regex");
+
+                let uri = params.text_document_position.text_document.uri;
+
+                let Some(document) = &self.documents.get(&uri) else {
+                    return Ok(None);
+                };
+
+                let line = document.lines().collect::<Vec<&str>>()[line_pos as usize];
+
+                if !indented_hash_regex
+                    .is_match(line)
+                    .expect("perfectly valid regex")
+                {
+                    return Ok(Some(completions.clone()));
+                }
+            }
+        }
+
+        Ok(None)
     }
 
     /// Document color request handler.

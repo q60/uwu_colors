@@ -1,9 +1,100 @@
-/// Module with helper functions related to hex colors parsing.
+//! Module with helper functions related to hex colors parsing.
+
+mod named_colors;
+
+pub use named_colors::NamedColors;
+
 use crate::Color;
 use crate::ColorInformation;
+use crate::CompletionItem;
+use crate::CompletionItemKind;
+use crate::CompletionResponse;
 use crate::Position;
 use crate::Range;
 use crate::Regex;
+
+/// Named colors completions mode.
+pub enum CompletionsMode {
+    /// both the uppercase hex strings and the lowercase ones.
+    Full,
+
+    /// no completions.
+    None,
+
+    /// only the uppercase hex colors after completion.
+    Uppercase,
+
+    /// only the lowercase hex colors after completion.
+    Lowercase,
+}
+
+/// Completion builder function.
+///
+/// Builds a [`CompletionResponse`] of a [`Vec`] of CSS named colors.
+pub fn named_colors_completions(
+    mode: &CompletionsMode,
+    colors: &NamedColors,
+) -> Option<CompletionResponse> {
+    if matches!(mode, CompletionsMode::None) {
+        return None;
+    }
+
+    let colors = colors.get();
+
+    let completions: Vec<CompletionItem> =
+        colors
+            .iter()
+            .fold(Vec::new(), |mut acc, (name, hex)| match mode {
+                CompletionsMode::Full => {
+                    let lowercase_colors = ((*name).to_string(), (*hex).to_string());
+
+                    acc.push(completion_item(lowercase_colors.0, lowercase_colors.1));
+
+                    if hex.matches(char::is_alphabetic).count() > 0 {
+                        let uppercase_colors = (name.to_uppercase(), hex.to_uppercase());
+
+                        acc.push(completion_item(uppercase_colors.0, uppercase_colors.1));
+                    }
+
+                    acc
+                }
+                CompletionsMode::Uppercase => {
+                    let uppercase_colors = ((*name).to_string(), hex.to_uppercase());
+
+                    acc.push(completion_item(uppercase_colors.0, uppercase_colors.1));
+
+                    acc
+                }
+                CompletionsMode::Lowercase => {
+                    let lowercase_colors = ((*name).to_string(), (*hex).to_string());
+
+                    acc.push(completion_item(lowercase_colors.0, lowercase_colors.1));
+
+                    acc
+                }
+                CompletionsMode::None => acc,
+            });
+
+    Some(CompletionResponse::Array(completions))
+}
+
+/// [`CompletionItem`] helper function.
+///
+/// Builds a [`CompletionItem`].
+fn completion_item(color_name: String, color_hex: String) -> CompletionItem {
+    CompletionItem {
+        kind: Some(CompletionItemKind::COLOR),
+        detail: Some(format!(
+            "\"#{}\" ({}) color",
+            color_hex,
+            color_name.to_lowercase()
+        )),
+        sort_text: Some(color_name.to_lowercase()),
+        insert_text: Some(color_hex),
+        label: color_name,
+        ..CompletionItem::default()
+    }
+}
 
 /// Color searching helper function.
 ///
@@ -17,7 +108,7 @@ pub fn colors_in_line_iter(
         .captures_iter(line)
         .filter(Result::is_ok)
         .map(move |captures| {
-            let captures = captures.unwrap();
+            let captures = captures.expect("perfectly valid regex");
             // the first capture is a full matching string
             // the second capture holds quotation marks
             // the third one holds hex value
@@ -75,7 +166,7 @@ fn parse_color(hex_str: &str) -> Option<Color> {
                     (hex & 0xF000) >> 12,
                     (hex & 0x0F00) >> 8,
                     (hex & 0x00F0) >> 4,
-                    (hex & 0x000F) as u8,
+                    (hex & 0x000F),
                 )
             };
 
@@ -87,7 +178,7 @@ fn parse_color(hex_str: &str) -> Option<Color> {
                 red: f32::from(r as u8) / 15f32,
                 green: f32::from(g as u8) / 15f32,
                 blue: f32::from(b as u8) / 15f32,
-                alpha: f32::from(a) / 15f32,
+                alpha: f32::from(a as u8) / 15f32,
             })
         }
         6 | 8 => {
@@ -234,5 +325,51 @@ mod colors_in_line_iter {
             .enumerate()
             .flat_map(|(line_num, line)| colors_in_line_iter(&regex, line_num, &line))
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod color_completions {
+    use super::*;
+
+    #[test]
+    fn named_color_completions_noop() {
+        assert_eq!(
+            None,
+            named_colors_completions(&CompletionsMode::None, &NamedColors::ColorHexa)
+        );
+    }
+
+    #[test]
+    fn named_color_completions_uppercase() {
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Uppercase, &NamedColors::ColorHexa)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+    }
+
+    #[test]
+    fn named_color_completions_lowercase() {
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Lowercase, &NamedColors::ColorHexa)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+    }
+
+    #[test]
+    fn named_color_completions_full() {
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Full, &NamedColors::ColorHexa)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
+
+        if let Some(CompletionResponse::Array(completion_items_vec)) =
+            named_colors_completions(&CompletionsMode::Full, &NamedColors::Css)
+        {
+            assert_eq!(false, completion_items_vec.is_empty());
+        }
     }
 }

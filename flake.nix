@@ -21,7 +21,12 @@
     nixpkgs,
     utils,
   }:
-    utils.lib.eachDefaultSystem
+    {
+      overlays.default = final: prev: {
+        uwu-colors = self.packages.${final.system}.default;
+      };
+    }
+    // utils.lib.eachDefaultSystem
     (system: let
       pkgs = import nixpkgs {inherit system;};
     in {
