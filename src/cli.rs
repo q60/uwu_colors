@@ -9,11 +9,11 @@ use argh::FromArgs;
 #[derive(FromArgs)]
 #[argh(help_triggers("-h", "--help", "help"))]
 struct Args {
-    /// mode of css named colors completions, can be one of: full, none, upper, lower. default: full
+    /// mode of css named colors completions, can be one of: full, none, upper, lower. default: upper
     #[argh(option, short = 'c', default = r#""upper".to_string()"#)]
     completions_mode: String,
 
-    /// color collection used for completions, can be one of: css, colorhexa. default: css
+    /// color collection used for completions, can be one of: css, colorhexa. default: colorhexa
     #[argh(option, short = 'o', default = r#""colorhexa".to_string()"#)]
     color_collection: String,
 
