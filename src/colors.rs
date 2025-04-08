@@ -3,6 +3,7 @@
 mod named_colors;
 
 pub use named_colors::NamedColors;
+use tower_lsp::lsp_types::Documentation;
 
 use crate::Color;
 use crate::ColorInformation;
@@ -84,11 +85,7 @@ pub fn named_colors_completions(
 fn completion_item(color_name: String, color_hex: String) -> CompletionItem {
     CompletionItem {
         kind: Some(CompletionItemKind::COLOR),
-        detail: Some(format!(
-            "\"#{}\" ({}) color",
-            color_hex,
-            color_name.to_lowercase()
-        )),
+        documentation: Some(Documentation::String(format!("#{color_hex}"))),
         sort_text: Some(color_name.to_lowercase()),
         insert_text: Some(color_hex),
         label: color_name,
