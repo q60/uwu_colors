@@ -2,7 +2,7 @@
 
 a simple language server that i made mainly for helix because of https://github.com/helix-editor/helix/pull/12308
 
-![first screenshot demonstrating usage in a nix file inside helix](https://i.imgur.com/nNMdrau.png)
+![first screenshot demonstrating usage in a nix file inside helix](https://i.imgur.com/h1R35Gq.png)
 
 ![second screenshot demonstrating help message](https://i.imgur.com/6nM046j.png)
 
