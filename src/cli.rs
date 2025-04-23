@@ -9,23 +9,29 @@ use argh::FromArgs;
 #[derive(FromArgs)]
 #[argh(help_triggers("-h", "--help", "help"))]
 struct Args {
-    /// mode of css named colors completions, can be one of: full, none, upper, lower. default: upper
+    /// enable color variables completions
+    #[argh(switch, short = 'a')]
+    variable_completions: bool,
+
+    /// mode of named colors completions, can be one of: full, none, upper, lower. default: upper
     #[argh(option, short = 'c', default = r#""upper".to_string()"#)]
-    completions_mode: String,
+    named_completions_mode: String,
 
     /// color collection used for completions, can be one of: css, colorhexa. default: colorhexa
     #[argh(option, short = 'o', default = r#""colorhexa".to_string()"#)]
     color_collection: String,
 
     /// version
-    #[argh(switch)]
+    #[argh(switch, short = 'V')]
     version: bool,
 }
 
 /// Configuration struct based on CLI args.
 pub struct Config {
+    pub variable_completions: bool,
+
     /// CSS named colors completions mode.
-    pub completions_mode: CompletionsMode,
+    pub named_completions_mode: CompletionsMode,
 
     /// ColorHexa colors by name.
     pub color_collection: NamedColors,
@@ -40,7 +46,8 @@ impl Config {
         let args: Args = argh::from_env();
 
         Self {
-            completions_mode: match args.completions_mode.to_lowercase().as_str() {
+            variable_completions: args.variable_completions,
+            named_completions_mode: match args.named_completions_mode.to_lowercase().as_str() {
                 "none" => CompletionsMode::None,
                 "upper" => CompletionsMode::Uppercase,
                 "lower" => CompletionsMode::Lowercase,

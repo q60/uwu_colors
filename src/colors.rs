@@ -9,7 +9,6 @@ use crate::Color;
 use crate::ColorInformation;
 use crate::CompletionItem;
 use crate::CompletionItemKind;
-use crate::CompletionResponse;
 use crate::Position;
 use crate::Range;
 use crate::Regex;
@@ -31,11 +30,11 @@ pub enum CompletionsMode {
 
 /// Completion builder function.
 ///
-/// Builds a [`CompletionResponse`] of a [`Vec`] of CSS named colors.
+/// Returns a [`Vec`] of [`CompletionItem`]s with [`NamedColors`] .
 pub fn named_colors_completions(
     mode: &CompletionsMode,
     colors: &NamedColors,
-) -> Option<CompletionResponse> {
+) -> Option<Vec<CompletionItem>> {
     if matches!(mode, CompletionsMode::None) {
         return None;
     }
@@ -76,7 +75,7 @@ pub fn named_colors_completions(
                 CompletionsMode::None => acc,
             });
 
-    Some(CompletionResponse::Array(completions))
+    Some(completions)
 }
 
 /// [`CompletionItem`] helper function.
@@ -96,6 +95,7 @@ fn completion_item(color_name: String, color_hex: String) -> CompletionItem {
 /// Color searching helper function.
 ///
 /// Searches for color matches in a `line` using `regex`, returns a [`ColorInformation`].
+#[allow(clippy::missing_panics_doc)]
 pub fn colors_in_line_iter(
     regex: &Regex,
     line_number: usize,

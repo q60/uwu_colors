@@ -12,6 +12,9 @@ use tower_lsp::jsonrpc::Result;
 #[allow(clippy::wildcard_imports, reason = "there is a ton of types")]
 use tower_lsp::lsp_types::*;
 
+const INDENTED_HASH_REGEX: &str = r"^\s+#";
+const VARIABLE_REGEX: &str = r#"^([a-zA-Z_]+)\s*=\s*(["'])\#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\2"#;
+
 /// Backend structure.
 #[derive(Debug)]
 pub struct Backend {
@@ -24,8 +27,11 @@ pub struct Backend {
     /// Regex to find colors in files.
     pub color_regex: Regex,
 
-    /// CSS named colors completions
-    pub completions: Option<CompletionResponse>,
+    /// Variable completions toggle.
+    pub variable_completions: bool,
+
+    /// CSS named colors completions.
+    pub color_completions: Option<Vec<CompletionItem>>,
 }
 
 #[tower_lsp::async_trait]
@@ -78,29 +84,36 @@ impl LanguageServer for Backend {
 
     /// Named colors completions handler.
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
-        if let Some(completions) = &self.completions {
-            let Position {
-                line: line_pos,
-                character: char_pos,
-            } = params.text_document_position.position;
+        let Self {
+            color_completions,
+            variable_completions,
+            ..
+        } = &self;
 
-            // early return on lines starting with `#`
-            if char_pos <= 1 {
-                return Ok(None);
-            }
+        let Position {
+            line: line_pos,
+            character: char_pos,
+        } = params.text_document_position.position;
 
-            let Some(context) = params.context else {
-                return Ok(None);
-            };
+        let Some(context) = params.context else {
+            return Ok(None);
+        };
 
+        // early return on lines starting with `#`
+        if char_pos <= 1 {
+            return Ok(None);
+        }
+
+        let uri = params.text_document_position.text_document.uri;
+
+        let Some(document) = &self.documents.get(&uri) else {
+            return Ok(None);
+        };
+
+        if let Some(completions) = color_completions {
             if Some("#".to_string()) == context.trigger_character {
-                let indented_hash_regex = Regex::new(r"^\s+#").expect("perfectly valid regex");
-
-                let uri = params.text_document_position.text_document.uri;
-
-                let Some(document) = &self.documents.get(&uri) else {
-                    return Ok(None);
-                };
+                let indented_hash_regex =
+                    Regex::new(INDENTED_HASH_REGEX).expect("perfectly valid regex");
 
                 let line = document.lines().collect::<Vec<&str>>()[line_pos as usize];
 
@@ -108,9 +121,35 @@ impl LanguageServer for Backend {
                     .is_match(line)
                     .expect("perfectly valid regex")
                 {
-                    return Ok(Some(completions.clone()));
+                    return Ok(Some(CompletionResponse::Array(completions.clone())));
                 }
             }
+        }
+
+        if *variable_completions && context.trigger_character.is_none() {
+            let bindings = Regex::new(VARIABLE_REGEX).expect("perfectly valid regex");
+
+            let mut completions: Vec<CompletionItem> = vec![];
+
+            document.lines().for_each(|line| {
+                if let Some(captures) = bindings.captures(line).unwrap() {
+                    let (variable_name, color_match) = (
+                        captures.get(1).unwrap().as_str(),
+                        captures.get(3).unwrap().as_str(),
+                    );
+
+                    completions.push(CompletionItem {
+                        kind: Some(CompletionItemKind::COLOR),
+                        documentation: Some(Documentation::String(format!("#{color_match}"))),
+                        sort_text: Some(variable_name.to_owned()),
+                        insert_text: Some(variable_name.to_owned()),
+                        label: variable_name.to_owned(),
+                        ..CompletionItem::default()
+                    });
+                }
+            });
+
+            return Ok(Some(CompletionResponse::Array(completions)));
         }
 
         Ok(None)
