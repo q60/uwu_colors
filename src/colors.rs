@@ -30,7 +30,7 @@ pub enum CompletionsMode {
 
 /// Completion builder function.
 ///
-/// Returns a [`Vec`] of CSS named color [`CompletionItem`]s.
+/// Returns a [`Vec`] of [`CompletionItem`]s with [`NamedColors`] .
 pub fn named_colors_completions(
     mode: &CompletionsMode,
     colors: &NamedColors,
