@@ -27,14 +27,15 @@ async fn main() {
 
     let documents = DashMap::new();
     let color_regex = Regex::new(COLOR_REGEX).unwrap();
-    let completions =
-        colors::named_colors_completions(&config.completions_mode, &config.color_collection);
+    let color_completions =
+        colors::named_colors_completions(&config.named_completions_mode, &config.color_collection);
 
     let (service, socket) = LspService::new(|client| Backend {
         client,
         documents,
         color_regex,
-        completions,
+        color_completions,
+        variable_completions: config.variable_completions,
     });
 
     Server::new(stdin, stdout, socket).serve(service).await;
