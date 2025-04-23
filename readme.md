@@ -4,24 +4,28 @@ a simple language server that i made mainly for helix because of https://github.
 
 ![first screenshot demonstrating usage in a nix file inside helix](https://i.imgur.com/h1R35Gq.png)
 
-![second screenshot demonstrating help message](https://i.imgur.com/6nM046j.png)
+![second screenshot demonstrating variable completions](https://i.imgur.com/xfUVAVB.png)
+
+![third screenshot demonstrating help message](https://i.imgur.com/lrPDcDR.png)
 
 
 ## features
 
-`uwu-colors` sends `textDocument/documentColor` request on hex color strings like `"#ABC"`, `"#abcd"`, `'#AaBbCc'`, `'#AABBCCDD'`.
+`uwu-colors` sends `textDocument/documentColor` request on hex color strings like `"#ABC"`, `"#abcd"`, `'#AaBbCc'`, `'#AABBCCDD'`
 
-it also provides named color completions.
+it also provides various completions
 
 
 ### completions
 
 named color completions are enabled by default - uppercase hex colors from https://www.colorhexa.com/color-names
 
+variable completions can be enabled using a flag
 
-#### options
 
-`--completions-mode`:
+#### options and flags
+
+`--named-completions-mode`:
 - `upper` completes with uppercase hex strings
 - `lower` - with lowercase strings
 - `full` - both with lowercase strings and uppercase strings using uppercase names
@@ -30,6 +34,8 @@ named color completions are enabled by default - uppercase hex colors from https
 `--color-collection`:
 - `colorhexa` - named colors from ColorHexa
 - `css` - named CSS colors
+
+`--variable-completions` - enables variable completions like on the second screenshot
 
 
 ## installation
