@@ -2,6 +2,10 @@
 name = "uwu_colors"
 version = "0.4.0"
 edition = "2024"
+description = "simple language server to colorize hex color strings via textDocument/documentColor"
+repository = "https://codeberg.org/q60/uwu_colors"
+license = "Unlicense"
+readme = "readme.md"
 
 [profile.release]
 opt-level = 3
