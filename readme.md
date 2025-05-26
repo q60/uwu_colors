@@ -45,7 +45,9 @@ variable completions can be enabled using a flag
 ### you can use it as a flake
 
 1. add it to your system's inputs
-2. overlay it as `inputs.uwu-colors.packages.${pkgs.system}.default`
+2. overlay it
+  - as `inputs.uwu-colors.overlays.default`
+  - *or* using packages overlay as `inputs.uwu-colors.packages.${pkgs.system}.default`
 3. add it to helix language server configuration with command `"${pkgs.uwu-colors}/bin/uwu_colors"`
 4. add it to your languages of needs
 
@@ -58,3 +60,8 @@ preferred way on a system w/o nix - `cargo install uwu_colors`
 ### binary from releases
 
 grab an x86_64 binary from github [releases](https://github.com/q60/uwu_colors/releases)
+
+
+### packaging status
+
+[![repology packaging status](https://repology.org/badge/vertical-allrepos/uwu-colors.svg)](https://repology.org/project/uwu-colors/versions)
