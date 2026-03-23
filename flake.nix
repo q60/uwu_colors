@@ -23,7 +23,7 @@
   }:
     {
       overlays.default = final: prev: {
-        uwu-colors = self.packages.${final.system}.default;
+        uwu-colors = self.packages.${final.stdenv.hostPlatform.system}.default;
       };
     }
     // utils.lib.eachDefaultSystem
