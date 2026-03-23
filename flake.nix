@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    utils.url = "github:numtide/flake-utils";
   };
 
   nixConfig = {
@@ -19,30 +18,25 @@
   outputs = {
     self,
     nixpkgs,
-    utils,
-  }:
+  }: let
+    lib = nixpkgs.lib;
+    default-nix = system:
+      import ./default.nix {
+        inherit nixpkgs lib system;
+      };
+  in
     {
       overlays.default = final: prev: {
         uwu-colors = self.packages.${final.stdenv.hostPlatform.system}.default;
       };
     }
-    // utils.lib.eachDefaultSystem
-    (system: let
-      pkgs = import nixpkgs {inherit system;};
-    in {
-      packages = {
-        default = pkgs.rustPlatform.buildRustPackage {
-          name = "uwu_colors";
-
-          nativeBuildInputs = [
-            pkgs.clippy
-          ];
-
-          cargoLock.lockFile = ./Cargo.lock;
-          src = pkgs.lib.cleanSource ./.;
+    // lib.mapAttrs (_: lib.genAttrs ["x86_64-linux" "aarch64-linux" "aarch64-darwin"]) {
+      packages = system: (default-nix system).packages;
+      apps = system: {
+        default = {
+          type = "app";
+          program = lib.getExe self.packages.${system}.default;
         };
       };
-
-      apps.default = utils.lib.mkApp {drv = self.packages.${system}.default;};
-    });
+    };
 }
